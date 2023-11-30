@@ -9,6 +9,16 @@
 
     <ItemGroup>
         <PackageReference Include="Grpc.AspNetCore" Version="2.57.0"/>
+        <PackageReference Include="Lucene.Net" Version="4.8.0-beta00016" />
+        <PackageReference Include="Lucene.Net.Analysis.Common" Version="4.8.0-beta00016" />
+        <PackageReference Include="Riok.Mapperly" Version="3.3.0-next.5" />
+        <PackageReference Include="Serilog.Formatting.Compact" Version="2.0.0" />
     </ItemGroup>
 
+    <ItemGroup>
+        <Protobuf Include="../opentelemetry-proto/**/*.proto" GrpcServices="Server">
+            <ProtoRoot>../opentelemetry-proto/</ProtoRoot>
+        </Protobuf>
+    </ItemGroup>
+    
 </Project>

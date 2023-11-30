@@ -2,6 +2,10 @@
 Microsoft Visual Studio Solution File, Format Version 12.00
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Cyan.Logs.Server", "Cyan.Logs.Server\Cyan.Logs.Server.csproj", "{208E9AB3-E199-4567-9E86-E09598A7303B}"
 EndProject
+Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Tests", "Tests", "{4DC70CE1-9E82-4FE2-95D2-A28E848F0267}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Cyan.Logs.Server.Tests", "Cyan.Logs.Server.Tests\Cyan.Logs.Server.Tests.csproj", "{A7C233E4-F6E2-42F5-947B-D2E3549B9CC1}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
@@ -12,5 +16,12 @@ Global
 		{208E9AB3-E199-4567-9E86-E09598A7303B}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{208E9AB3-E199-4567-9E86-E09598A7303B}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{208E9AB3-E199-4567-9E86-E09598A7303B}.Release|Any CPU.Build.0 = Release|Any CPU
+		{A7C233E4-F6E2-42F5-947B-D2E3549B9CC1}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{A7C233E4-F6E2-42F5-947B-D2E3549B9CC1}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{A7C233E4-F6E2-42F5-947B-D2E3549B9CC1}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{A7C233E4-F6E2-42F5-947B-D2E3549B9CC1}.Release|Any CPU.Build.0 = Release|Any CPU
+	EndGlobalSection
+	GlobalSection(NestedProjects) = preSolution
+		{A7C233E4-F6E2-42F5-947B-D2E3549B9CC1} = {4DC70CE1-9E82-4FE2-95D2-A28E848F0267}
 	EndGlobalSection
 EndGlobal
