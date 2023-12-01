@@ -1,5 +1,7 @@
-﻿using System.Text.Json;
+﻿using System.Runtime.CompilerServices;
+using System.Text.Json;
 using J2N.Text;
+using Lucene.Net.Analysis.Standard;
 using Lucene.Net.Documents;
 using Lucene.Net.QueryParsers.Flexible.Standard;
 using Lucene.Net.Search;
@@ -10,14 +12,16 @@ namespace Cyan.Logs.Server.Hubs;
 
 public class LogsHub(SearcherManager searcherManager) : Hub
 {
-    public async Task Query(string search)
+    public async IAsyncEnumerable<IDictionary<string, string>> Query(string search,
+        [EnumeratorCancellation]
+        CancellationToken cancellationToken)
     {
-        var queryParserHelper = new StandardQueryParser();
+        var queryParserHelper = new StandardQueryParser(new StandardAnalyzer(LuceneVersion.LUCENE_48));
         var query = string.IsNullOrEmpty(search) ? new MatchAllDocsQuery() : queryParserHelper.Parse(search, "@m");
 
         string maxTimestamp = null;
 
-        while (!Context.ConnectionAborted.IsCancellationRequested)
+        while (!cancellationToken.IsCancellationRequested)
         {
             var searcher = searcherManager.Acquire();
 
@@ -49,7 +53,7 @@ public class LogsHub(SearcherManager searcherManager) : Hub
                     var dict = doc.ToDictionary(f => f.Name, f => f.GetStringValue());
                     dict["@t"] = DateTools.StringToDate(timestamp).ToString("s", System.Globalization.CultureInfo.InvariantCulture);
 
-                    await Clients.Client(Context.ConnectionId).SendAsync("Log", dict);
+                    yield return dict;
                 }
             }
             finally

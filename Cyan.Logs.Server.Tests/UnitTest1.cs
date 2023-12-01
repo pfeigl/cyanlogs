@@ -23,6 +23,8 @@ public class UnitTest1
                 .Error(ex, "Hello World");
         }
         
+        Log.Information("information log");
+        
         Log.CloseAndFlush();
         
     }

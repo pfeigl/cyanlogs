@@ -1,3 +1,6 @@
+<input type="text" [(ngModel)]="search" />
+<input type="button" (click)="doSearch()" value="search" />
+
 @for (log of logs; track $index)
 {
   <p>{{ log["@t"] }}: {{ log["@m"] }}</p>

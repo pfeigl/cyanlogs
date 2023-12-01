@@ -16,6 +16,7 @@ public class LogsService(IndexWriter indexWriter, SearcherManager searcherManage
             indexWriter.AddDocument(document);
         }
         
+        indexWriter.Commit();
         indexWriter.Flush(triggerMerge: false, applyAllDeletes: false);
         searcherManager.MaybeRefresh();
         
