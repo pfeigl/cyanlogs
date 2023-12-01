@@ -1,5 +1,4 @@
-<input type="text" [(ngModel)]="search" />
-<input type="button" (click)="doSearch()" value="search" />
+<input type="text" name="searchControl" [formControl]="searchControl" />
 
 @for (log of logs; track $index)
 {

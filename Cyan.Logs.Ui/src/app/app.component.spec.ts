@@ -17,7 +17,7 @@ describe('AppComponent', () => {
   it(`should have the 'Cyan.Logs.Ui' title`, () => {
     const fixture = TestBed.createComponent(AppComponent);
     const app = fixture.componentInstance;
-    expect(app.search).toEqual('Cyan.Logs.Ui');
+    expect(app.searchText).toEqual('Cyan.Logs.Ui');
   });
 
   it('should render title', () => {

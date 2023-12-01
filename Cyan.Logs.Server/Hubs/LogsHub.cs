@@ -1,5 +1,6 @@
 ﻿using System.Runtime.CompilerServices;
 using System.Text.Json;
+using System.Threading.Channels;
 using J2N.Text;
 using Lucene.Net.Analysis.Standard;
 using Lucene.Net.Documents;
@@ -12,56 +13,69 @@ namespace Cyan.Logs.Server.Hubs;
 
 public class LogsHub(SearcherManager searcherManager) : Hub
 {
-    public async IAsyncEnumerable<IDictionary<string, string>> Query(string search,
-        [EnumeratorCancellation]
-        CancellationToken cancellationToken)
+    public async IAsyncEnumerable<IDictionary<string, string>> Query(ChannelReader<string> searchStream,
+        [EnumeratorCancellation] CancellationToken cancellationToken)
     {
-        var queryParserHelper = new StandardQueryParser(new StandardAnalyzer(LuceneVersion.LUCENE_48));
-        var query = string.IsNullOrEmpty(search) ? new MatchAllDocsQuery() : queryParserHelper.Parse(search, "@m");
-
-        string maxTimestamp = null;
-
-        while (!cancellationToken.IsCancellationRequested)
+        while (await searchStream.WaitToReadAsync(cancellationToken))
         {
-            var searcher = searcherManager.Acquire();
-
-            try
+            while (searchStream.TryRead(out var search))
             {
-                // We start with the newest search results
-                var revertSort = true;
+                var queryParserHelper = new StandardQueryParser(new StandardAnalyzer(LuceneVersion.LUCENE_48));
+                var query = string.IsNullOrEmpty(search)
+                    ? new MatchAllDocsQuery()
+                    : queryParserHelper.Parse(search, "@m");
 
-                TermRangeFilter? filter = null;
-                if (!string.IsNullOrEmpty(maxTimestamp))
+                string maxTimestamp = null;
+
+                while (!cancellationToken.IsCancellationRequested)
                 {
-                    filter = new TermRangeFilter("@t", new BytesRef(maxTimestamp), null, false, false);
-                    revertSort = false;
-                }
-
-                var sort = new Sort(new SortField("@t", SortFieldType.STRING, revertSort));
-                var hits = searcher.Search(query, filter, 1000, sort, false, false).ScoreDocs;
-
-                foreach (var hit in hits)
-                {
-                    var doc = searcher.Doc(hit.Doc);
-                    var timestamp = doc.Get("@t");
-
-                    if (maxTimestamp.CompareToOrdinal(timestamp) < 0)
+                    if (searchStream.TryPeek(out _))
                     {
-                        maxTimestamp = timestamp;
+                        break;
                     }
                     
-                    var dict = doc.ToDictionary(f => f.Name, f => f.GetStringValue());
-                    dict["@t"] = DateTools.StringToDate(timestamp).ToString("s", System.Globalization.CultureInfo.InvariantCulture);
+                    var searcher = searcherManager.Acquire();
 
-                    yield return dict;
+                    try
+                    {
+                        // We start with the newest search results
+                        var revertSort = true;
+
+                        TermRangeFilter? filter = null;
+                        if (!string.IsNullOrEmpty(maxTimestamp))
+                        {
+                            filter = new TermRangeFilter("@t", new BytesRef(maxTimestamp), null, false, false);
+                            revertSort = false;
+                        }
+
+                        var sort = new Sort(new SortField("@t", SortFieldType.STRING, revertSort));
+                        var hits = searcher.Search(query, filter, 1000, sort, false, false).ScoreDocs;
+
+                        foreach (var hit in hits)
+                        {
+                            var doc = searcher.Doc(hit.Doc);
+                            var timestamp = doc.Get("@t");
+
+                            if (maxTimestamp.CompareToOrdinal(timestamp) < 0)
+                            {
+                                maxTimestamp = timestamp;
+                            }
+
+                            var dict = doc.ToDictionary(f => f.Name, f => f.GetStringValue());
+                            dict["@t"] = DateTools.StringToDate(timestamp)
+                                .ToString("s", System.Globalization.CultureInfo.InvariantCulture);
+
+                            yield return dict;
+                        }
+                    }
+                    finally
+                    {
+                        searcherManager.Release(searcher);
+                    }
+
+                    await Task.Delay(1_000, cancellationToken);
                 }
             }
-            finally
-            {
-                searcherManager.Release(searcher);
-            }
-
-            await Task.Delay(1_000);
         }
     }
 }
